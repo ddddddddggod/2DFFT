@@ -1,39 +1,24 @@
-%% 1. 기본 파라미터
-N = 64;                          % FFT 포인트 수
-fc = 24e9;                       % 중심 주파수 24GHz
-c = physconst('LightSpeed');    % 광속
-BW = 4e9;                        % FMCW 대역폭
-T_chirp = 40e-6;                 % Chirp duration
-slope = BW / T_chirp;
-t = linspace(0, T_chirp, N);    % Fast time (ADC 샘플)
+% === Verilog용 Q1.15 정현파 입력 생성 (Real + Imag = 0000) ===
+N = 64;                     % FFT 크기
+A = 0.9;                    % 진폭 (오버플로 방지)
+f = 5;                      % 사인파 주기 (N 샘플 내에서 f회 반복)
+n = 0:N-1;
 
-%% 2. 타겟 거리 기반 FMCW 신호 생성
-R = 1.2;                         % 타겟 거리 (m)
-tau = 2 * R / c;                 % 왕복 지연 시간
+sig = A * sin(2*pi*f*n/N);  % 정현파 신호 생성 (실수 성분만 있음)
 
-% Tx / Rx 시그널
-tx = exp(1j * 2 * pi * (fc * t + 0.5 * slope * t.^2));
-rx = exp(1j * 2 * pi * (fc * (t - tau) + 0.5 * slope * (t - tau).^2));
+% Q1.15 고정소수점으로 변환
+q15_scale = 2^15;
+sig_q15 = round(sig * q15_scale);
+sig_q15(sig_q15 < 0) = sig_q15(sig_q15 < 0) + 2^16;  % 2's complement wrap to unsigned 16-bit
 
-% IF 신호 (복소수)
-if_signal = tx .* conj(rx);
-
-%% 3. Q1.15 고정소수점 스케일링
-scale = 2^15;
-re_fixed = round(real(if_signal) * scale);
-im_fixed = round(imag(if_signal) * scale);
-
-% 16-bit 정수 범위 제한
-re_fixed = min(max(re_fixed, -2^15), 2^15 - 1);
-im_fixed = min(max(im_fixed, -2^15), 2^15 - 1);
-
-%% 4. Verilog용 입력 파일 저장 (hex)
-fid = fopen('if_input.txt', 'w');
+% 텍스트 파일로 저장 (real imag 쌍, imag는 항상 0000)
+fileID = fopen('if_input2.txt', 'w');
 for i = 1:N
-    re_hex = typecast(int16(re_fixed(i)), 'uint16');
-    im_hex = typecast(int16(im_fixed(i)), 'uint16');
-    fprintf(fid, '%04x %04x\n', re_hex, im_hex);  % real imag 순서
+    fprintf(fileID, '%04X 0000\n', sig_q15(i));
 end
-fclose(fid);
+fclose(fileID);
 
-disp('[✔] if_input.txt 저장 완료: Verilog 테스트벤치 입력으로 사용 가능');
+% 시각화 (선택)
+figure;
+plot(n, sig, 'o-');
+title('입력 정현파'); xlabel('n'); ylabel('Amplitude'); grid on;

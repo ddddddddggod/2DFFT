@@ -1,0 +1,92 @@
+`timescale 1ns/1ps
+module tb_fft;
+    parameter WIDTH = 16;
+    parameter N = 128;
+
+    reg             clock;
+    reg             reset;
+    reg             di_en;
+    reg [WIDTH-1:0] di_re;
+    reg [WIDTH-1:0] di_im;
+    wire            do_en;
+    wire [WIDTH-1:0] do_re;
+    wire [WIDTH-1:0] do_im;
+
+    // FFT 모듈 인스턴스
+    FFT #(.WIDTH(WIDTH)) fft_inst (
+        .clock(clock),
+        .reset(reset),
+        .di_en(di_en),
+        .di_re(di_re),
+        .di_im(di_im),
+        .do_en(do_en),
+        .do_re(do_re),
+        .do_im(do_im)
+    );
+
+    // 입력 데이터 저장
+    reg [WIDTH-1:0] input_re [0:N-1];
+    reg [WIDTH-1:0] input_im [0:N-1];
+
+    integer infile, outfile;
+    integer i;
+
+    initial begin
+        // 초기화
+        clock = 0;
+        reset = 1;
+        di_en = 0;
+        di_re = 0;
+        di_im = 0;
+        #20;
+        reset = 0;
+
+        // 입력 파일 열기
+        infile = $fopen("fft_dopplerinput.txt", "r");
+        if (infile == 0) begin
+            $display("입력 파일 열기 실패");
+            $finish;
+        end
+
+        // 입력 값 읽기
+        for (i = 0; i < N; i = i + 1) begin
+            $fscanf(infile, "%h %h\n", input_re[i], input_im[i]);
+        end
+        $fclose(infile);
+
+        // 출력 파일 열기
+        outfile = $fopen("fft_doppleroutput.txt", "w");
+        if (outfile == 0) begin
+            $display("출력 파일 열기 실패");
+            $finish;
+        end
+
+        // FFT 입력 시작
+        #10;
+        for (i = 0; i < N; i = i + 1) begin
+            @(posedge clock);
+            di_en <= 1;
+            di_re <= input_re[i];
+            di_im <= input_im[i];
+        end
+
+        @(posedge clock);
+        di_en <= 0;
+
+        // 출력 쓰기
+        repeat(300) begin
+            @(posedge clock);
+            if (do_en) begin
+                $fwrite(outfile, "%04X %04X\n", do_re, do_im);
+            end
+        end
+
+        $fclose(outfile);
+        $display("출력 완료: fft_doppleroutput.txt");
+        $stop;
+    end
+
+    // 클럭 생성
+    always #5 clock = ~clock;
+
+endmodule

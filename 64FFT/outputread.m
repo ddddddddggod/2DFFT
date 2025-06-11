@@ -23,11 +23,15 @@ subplot(2,1,1);  % Real 값을 위에
 stem(0:length(y)-1, real(y), 'filled');
 title('Real Part of Verilog FFT Output');
 xlabel('Frequency Bin'); ylabel('Real'); grid on;
-ylim([-1e-17, 1e-17]);   % Real y축 스케일
+
 
 subplot(2,1,2);  % Imag 값을 아래에
 stem(0:length(y)-1, imag(y), 'filled');
 title('Imaginary Part of Verilog FFT Output');
 xlabel('Frequency Bin'); ylabel('Imag'); grid on;
-ylim([-0.5, 0.5]);        % Imaginary y축 스케일
+
+
+
+
+
 

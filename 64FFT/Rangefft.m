@@ -31,11 +31,31 @@ subplot(2,1,1);
 stem(0:N-1, real(X_br), 'filled');
 title('Real Part of FFT Output (bit-reversed, MATLAB)');
 xlabel('Index'); ylabel('Real'); grid on;
-ylim([-1e-17, 1e-17]);  % Real y축 스케일
+ylim([-1e-17, 3e-5]);   % Real y축 스케일
 
 subplot(2,1,2);
 stem(0:N-1, imag(X_br), 'filled');
 title('Imaginary Part of FFT Output (bit-reversed, MATLAB)');
 xlabel('Index'); ylabel('Imaginary'); grid on;
-ylim([-0.5, 0.5]);      % Imaginary y축 스케일
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

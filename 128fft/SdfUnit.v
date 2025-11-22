@@ -2,7 +2,7 @@
 //  SdfUnit: Radix-2^2 Single-Path Delay Feedback Unit for N-Point FFT
 //----------------------------------------------------------------------
 module SdfUnit #(
-    parameter   N = 64,     //  Number of FFT Point
+    parameter   N = 128,     //  Number of FFT Point
     parameter   M = 64,     //  Twiddle Resolution
     parameter   WIDTH = 16  //  Data Bit Length
 )(

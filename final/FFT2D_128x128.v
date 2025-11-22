@@ -34,7 +34,7 @@ module FFT2D_128x128 #(
     wire [WIDTH-1:0]    range_do_im;
 
     // ★ 여기가 "Range FFT" 역할
-    FFT #(.WIDTH(WIDTH)) RANGE_FFT (
+    Range_FFT #(.WIDTH(WIDTH)) RANGE_FFT (
         .clock  (clock      ),
         .reset  (reset      ),
         .di_en  (di_en      ),
@@ -76,7 +76,7 @@ module FFT2D_128x128 #(
     // 버퍼에서 나오는 데이터는 이미 전치된 상태 (range-bin 별 slow-time)
     // → Doppler FFT는 각 range-bin에 대해 128pt FFT 수행
     //------------------------------------------------------------------
-    FFT #(.WIDTH(WIDTH)) DOPPLER_FFT (
+    Doppler_FFT #(.WIDTH(WIDTH)) DOPPLER_FFT (
         .clock  (clock     ),
         .reset  (reset     ),
         .di_en  (buf_do_en ),   // 버퍼의 do_en이 Doppler FFT의 di_en

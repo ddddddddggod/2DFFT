@@ -23,7 +23,11 @@ module FFT2D_128x128 #(
     // 출력: 최종 2D FFT 결과 (Doppler FFT 출력 스트림)
     output                  do_en,
     output      [WIDTH-1:0] do_re,
-    output      [WIDTH-1:0] do_im
+    output      [WIDTH-1:0] do_im,
+
+    // ★ ADDED: 디버깅용 Range/Doppler 경계 신호
+    output                  range_finish,   // Range FFT 결과 128x128 write 완료
+    output                  doppler_start   // Doppler FFT로 첫 샘플 나갈 때
 );
 
     //------------------------------------------------------------------
@@ -52,22 +56,30 @@ module FFT2D_128x128 #(
     wire [WIDTH-1:0]    buf_do_re;
     wire [WIDTH-1:0]    buf_do_im;
 
+    // ★ ADDED: 버퍼 내부 디버그 신호
+    wire                buf_range_finish;
+    wire                buf_doppler_start;
+
     FFT2D_Buffer #(
         .WIDTH (WIDTH),
         .N     (128)
     ) RD_BUFFER (
-        .clock (clock      ),
-        .reset (reset      ),
+        .clock        (clock      ),
+        .reset        (reset      ),
 
         // Range FFT 출력 → 버퍼 입력
-        .di_en (range_do_en),
-        .di_re (range_do_re),
-        .di_im (range_do_im),
+        .di_en        (range_do_en),
+        .di_re        (range_do_re),
+        .di_im        (range_do_im),
 
         // 버퍼 출력 → Doppler FFT 입력
-        .do_en (buf_do_en  ),
-        .do_re (buf_do_re  ),
-        .do_im (buf_do_im  )
+        .do_en        (buf_do_en  ),
+        .do_re        (buf_do_re  ),
+        .do_im        (buf_do_im  ),
+
+        // ★ ADDED: 버퍼에서 나오는 디버그 신호 연결
+        .range_finish (buf_range_finish),
+        .doppler_start(buf_doppler_start)
     );
 
     //------------------------------------------------------------------
@@ -86,5 +98,9 @@ module FFT2D_128x128 #(
         .do_re  (do_re     ),
         .do_im  (do_im     )
     );
+
+    // ★ ADDED: Top-level 디버그 포트로 전달
+    assign range_finish  = buf_range_finish;
+    assign doppler_start = buf_doppler_start;
 
 endmodule

@@ -1,9 +1,3 @@
-//----------------------------------------------------------------------
-//  FFT2D_Buffer: 128x128 Complex Frame Buffer with Transpose
-//  - 입력 (from Range FFT): row-major 순서로 128x128 샘플 쓰기
-//  - 출력 (to Doppler FFT): column-major 순서로 128x128 샘플 읽기
-//      => 사실상 행/열 전치된 데이터 스트림 제공
-//----------------------------------------------------------------------
 
 module FFT2D_Buffer #(
     parameter WIDTH = 16,
@@ -11,18 +5,12 @@ module FFT2D_Buffer #(
 )(
     input                   clock,
     input                   reset,
-
-    // Write side (from Range FFT)
-    //  Range FFT의 do_en/do_re/do_im을 그대로 물려주면 됨
     input                   di_en,
     input       [WIDTH-1:0] di_re,
     input       [WIDTH-1:0] di_im,
-
-    // Read side (to Doppler FFT)
-    //  Doppler FFT의 di_en/di_re/di_im에 연결
     output  reg             do_en,
     output  reg [WIDTH-1:0] do_re,
-    output  reg [WIDTH-1:0] do_im,      // ★ CHANGED: 콤마 추가
+    output  reg [WIDTH-1:0] do_im,      
 
     // ★ ADDED: 디버깅용 상태 신호
     output  reg             range_finish,   // Range FFT 결과 N×N 쓰기 완료 1클럭 펄스
@@ -100,7 +88,7 @@ always @(posedge clock or posedge reset) begin
             // WRITE STATE : Range FFT 결과를 N×N 메모리에 row-major로 저장
             //----------------------------------------------------------
             ST_WRITE: begin
-                do_en <= 1'b0;  // 읽기 중 아님
+                do_en <= 1'b0;  
 
                 if (di_en) begin
                     // 현재 위치에 쓰기
@@ -134,7 +122,6 @@ always @(posedge clock or posedge reset) begin
 
             //----------------------------------------------------------
             // READ STATE : 메모리에서 column-major 순서로 읽어서 출력
-            //  -> Doppler FFT는 각 range-bin(열)마다 128포인트 FFT 수행
             //----------------------------------------------------------
             ST_READ: begin
                 // 한 클럭에 한 sample씩 출력
@@ -149,7 +136,7 @@ always @(posedge clock or posedge reset) begin
 
                 rd_count <= rd_count + 1'b1;
 
-                // column-major: col 고정, row 0..N-1 → col++
+                // column-major: col 고정
                 if (rd_row == N-1) begin
                     rd_row <= {LOG_N{1'b0}};
                     if (rd_col == N-1) begin

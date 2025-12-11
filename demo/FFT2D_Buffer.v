@@ -5,6 +5,11 @@
 // Description: Fixed for Vivado Block RAM Inference.
 //              Separates Control Logic from Memory Core.
 //----------------------------------------------------------------------
+//----------------------------------------------------------------------
+// Module: FFT2D_Buffer (Transpose Buffer)
+// Description: Fixed for Vivado Block RAM Inference.
+//              Separates Control Logic from Memory Core.
+//----------------------------------------------------------------------
 module FFT2D_Buffer #(
     parameter WIDTH = 16
 )(

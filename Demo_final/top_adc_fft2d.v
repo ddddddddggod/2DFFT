@@ -49,9 +49,9 @@ module top_adc_fft2d (
     // ============================================================
     // 2) 12bit ADC → 16bit FFT 입력 정규화
     // ============================================================
-    wire        di_en = drdy;
-    wire [15:0] di_re = adc_raw0 << 4;    // 12 → 16bit 확장
-    wire [15:0] di_im = adc_raw1 << 4;
+   // wire        di_en = drdy;
+   // wire [15:0] di_re = adc_raw0 << 4;    // 12 → 16bit 확장
+    //wire [15:0] di_im = adc_raw1 << 4;
 
     // Debug output for TB/ILA
     assign dbg_di_en = di_en;

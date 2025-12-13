@@ -85,7 +85,7 @@ imagesc(v_axis, range_bins, RD);
 set(gca,'YDir','normal');
 xlabel('Velocity (m/s)', 'FontSize', 12, 'FontWeight', 'bold');
 ylabel('Range Bin', 'FontSize', 12, 'FontWeight', 'bold');
-title('Cleaned Range–Doppler Map (Clutter Removed)', 'FontSize', 14);
+title('Breathing Range–Velocity Map', 'FontSize', 14);
 
 % 컬러맵
 cmap = [

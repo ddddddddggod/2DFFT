@@ -43,13 +43,7 @@ if not os.path.exists(FIFO_PATH):
 print(">> Python Live Viewer Started")
 pipe = open(FIFO_PATH, "rb")
 
-##추가
-print(">> Syncing Frame... Clearing buffer.")
-# FIFO에 쌓인 찌꺼기를 최대 10프레임 분량만큼 읽어서 버립니다.
-pipe.read(65536 * 10) 
-print(">> Sync Done. Starting Viewer.")
 
-buffer = np.array([], dtype=np.int16)
 
 # ============================================================
 # Plot 준비

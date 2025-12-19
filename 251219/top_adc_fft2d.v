@@ -115,19 +115,20 @@ module top_adc_fft2d (
     // probe9  = do_re (16bit)
     // probe10 = do_im (16bit)
     // ============================================================
+    // ILA (RTL 인스턴스 유지)
+    // ============================================================
     ila_0 ila_inst (
         .clk    (clk50),
         .probe0 (drdy),
-        .probe1 (adc_raw0),
-        .probe2 (adc_raw1),
-        .probe3 (di_en),
-        .probe4 (di_re),
-        .probe5 (di_im),
-        .probe6 (range_finish),
-        .probe7 (doppler_start),
-        .probe8 (do_en),
-        .probe9 (do_re),
-        .probe10(do_im)
+        .probe1 (di_en),
+        .probe2 (di_re),
+        .probe3 (di_im),
+        .probe4 (range_finish),
+        .probe5 (doppler_start),
+        .probe6 (do_en),
+        .probe7 (do_re),
+        .probe8 (do_im)
     );
 
 endmodule
+

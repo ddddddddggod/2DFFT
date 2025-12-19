@@ -130,3 +130,4 @@ module FFT2D_Buffer #(
     assign rd_im = (bank_sel_wr == 0) ? dout_im_1 : dout_im_0;
 
 endmodule
+

@@ -1,81 +1,82 @@
 module FPGA_Top (
-    input  wire CLK100MHZ,      // 125MHz System Clock
-    input  wire ck_rst,         // BTN0 (Reset)
-    
+    input  wire CLK100MHZ,
+    input  wire ck_rst,
+
     // PMOD AD1 Interface
     output wire JA1_CS,
     input  wire JA2_DATA0,
     input  wire JA3_DATA1,
     output wire JA4_SCLK,
 
-    // ★ 추가된 부분 1: 라즈베리 파이 연결용 SPI 포트 (ChipKit 핀)
-    input  wire ck_ss,          // IO10 (CS)
-    input  wire ck_sck,         // IO13 (SCLK)
-    output wire ck_miso,        // IO12 (MISO)
+    // Raspberry Pi SPI Interface (ChipKit Pins)
+    input  wire ck_ss,   // IO10 (CS)
+    input  wire ck_sck,  // IO13 (SCK)
+    input  wire ck_mosi, // IO11 (MOSI) - 주소 전달용 추가
+    output wire ck_miso, // IO12 (MISO)
 
-    // Status LED
     output wire [3:0] led
 );
 
     wire sys_clk = CLK100MHZ;
-    wire resetn = ~ck_rst;    
+    wire resetn = ~ck_rst;
 
-    // -----------------------------------------------------------
-    // 디버깅용 내부 와이어
-    // -----------------------------------------------------------
-    (* mark_debug = "true", keep = "true" *) wire        w_dbg_di_en;
-    (* mark_debug = "true", keep = "true" *) wire [15:0] w_dbg_di_re;
-    (* mark_debug = "true", keep = "true" *) wire [15:0] w_dbg_di_im;
-    (* mark_debug = "true", keep = "true" *) wire        w_dbg_range_finish;
-    (* mark_debug = "true", keep = "true" *) wire        w_dbg_doppler_start;
-    (* mark_debug = "true", keep = "true" *) wire        w_dbg_do_en;
-    (* mark_debug = "true", keep = "true" *) wire [15:0] w_dbg_do_re; // FFT 결과 (실수)
-    (* mark_debug = "true", keep = "true" *) wire [15:0] w_dbg_do_im; // FFT 결과 (허수)
+    // FFT 모듈 출력 와이어
+    wire        w_dbg_do_en;
+    wire [15:0] w_dbg_do_re;
+    wire [15:0] w_dbg_do_im;
 
-    // -----------------------------------------------------------
-    // 메인 로직 인스턴스 (FFT 계산)
-    // -----------------------------------------------------------
+    // FFT 모듈 인스턴스
     top_adc_fft2d u_logic (
-        .clk50    (sys_clk), 
-        .resetn   (resetn),
-        .JA1_CS    (JA1_CS),
-        .JA2_DATA0 (JA2_DATA0),
-        .JA3_DATA1 (JA3_DATA1),
-        .JA4_SCLK  (JA4_SCLK),
-
-        .dbg_di_en        (w_dbg_di_en),
-        .dbg_di_re        (w_dbg_di_re),
-        .dbg_di_im        (w_dbg_di_im),
-        .dbg_range_finish (w_dbg_range_finish),
-        .dbg_doppler_start(w_dbg_doppler_start),
-        .dbg_do_en        (w_dbg_do_en),
-        .dbg_do_re        (w_dbg_do_re), // 여기서 나온 값이 와이어에 실림
-        .dbg_do_im        (w_dbg_do_im)  // 여기서 나온 값이 와이어에 실림
+        .clk50             (sys_clk),
+        .resetn            (resetn),
+        .JA1_CS            (JA1_CS),
+        .JA2_DATA0         (JA2_DATA0),
+        .JA3_DATA1         (JA3_DATA1),
+        .JA4_SCLK          (JA4_SCLK),
+        .dbg_do_en         (w_dbg_do_en),
+        .dbg_do_re         (w_dbg_do_re),
+        .dbg_do_im         (w_dbg_do_im)
+        // ... (필요한 다른 포트 연결)
     );
 
-    // -----------------------------------------------------------
-    // ★ 추가된 부분 2: 데이터 합치기 & SPI 모듈 연결
-    // -----------------------------------------------------------
-    
-    // 1. 데이터를 32비트 한 줄로 (상위 16비트: 실수, 하위 16비트: 허수)
-       wire [31:0] spi_send_data = {w_dbg_do_re, w_dbg_do_im};
+    // 1. FFT 쓰기 주소 카운터 (14비트)
+    reg [13:0] fft_wr_addr;
+    always @(posedge sys_clk) begin
+        if (~resetn) begin
+            fft_wr_addr <= 0;
+        end else if (w_dbg_do_en) begin
+            fft_wr_addr <= fft_wr_addr + 1; // 16383 이후 0으로 자동 롤오버
+        end
+    end
 
+    // 2. 128x128 Output Memory (Dual-Port)
+    wire [13:0] rpi_rd_addr;
+    wire [31:0] ram_data_out;
 
+    output_buffer #(
+        .DATA_WIDTH(32),
+        .ADDR_WIDTH(14)
+    ) u_mem (
+        .clk    (sys_clk),
+        .we_a   (w_dbg_do_en),
+        .addr_a (fft_wr_addr),
+        .din_a  ({w_dbg_do_re, w_dbg_do_im}), // 상위 16:Real, 하위 16:Imag
+        .addr_b (rpi_rd_addr),
+        .dout_b (ram_data_out)
+    );
 
-    // 2. SPI Slave 모듈을 불러와서 라즈베리 파이 포트와 데이터 선을 연결합니다.
-    SPI_Slave u_spi_bridge (
+    // 3. SPI Slave (라즈베리 파이 통신)
+    SPI_Slave u_spi (
         .clk      (sys_clk),
         .rst      (~resetn),
-        .spi_cs   (ck_ss),      // 라즈베리 파이의 CS 신호 받기
-        .spi_sclk (ck_sck),     // 라즈베리 파이의 SCLK 신호 받기
-        .spi_miso (ck_miso),    // 라즈베리 파이로 데이터 보내기
-        .data_in  (spi_send_data) // ★ 합친 FFT 결과값을 여기에 꽂습니다!
+        .spi_cs   (ck_ss),
+        .spi_sclk (ck_sck),
+        .spi_mosi (ck_mosi),
+        .spi_miso (ck_miso),
+        .addr_out (rpi_rd_addr),
+        .data_in  (ram_data_out)
     );
 
-    // LED 상태 표시
-    assign led[0] = resetn;      
-    assign led[1] = w_dbg_do_en; 
-    assign led[2] = !ck_ss;      // SPI 통신 중일 때(CS Low) 켜짐
-    assign led[3] = 1'b0;
+    assign led = {1'b0, !ck_ss, w_dbg_do_en, resetn};
 
 endmodule

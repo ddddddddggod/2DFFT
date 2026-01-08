@@ -4,6 +4,7 @@
 Memory-efficient 2D FFT architecture for In-Cabin Monitoring Systems (ICMS)
 
 ## FPGA
+-Arty Z7-20
 - Altera Cyclone® IV 4CE115 FPGA device
 - MAX 10 10M50DAF484C7G Device
 

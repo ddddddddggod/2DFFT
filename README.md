@@ -4,10 +4,15 @@
 Memory-efficient 2D FFT architecture for In-Cabin Monitoring Systems (ICMS)
 
 ## FPGA
--Arty Z7-20
+** The FPGA platform was migrated to the Arty Z7 using a Digilent ADC module.
+- Arty Z7-20
 - Altera Cyclone® IV 4CE115 FPGA device
 - MAX 10 10M50DAF484C7G Device
+## Tool
+- Vivado, Modelsim : FPGA Simulation & Algorithm verification 
+- Matlab : Algorithm verification
 
-## 사용 Tool
-- Vivado, Modelsim : FPGA 시뮬레이션 및 알고리즘 검증
-- Matlab : 알고리즘 검증
+## Addtional
+- The architecture was initially planned as a 68×128 design but was ultimately finalized as a 128×128 configuration.
+- Throughout the project, all development stages and revisions were preserved without modification and systematically organized into separate folders. The final version of the project is contained in the `251219` directory.
+- The system was constructed as a demonstration pipeline consisting of analog signal acquisition, ADC conversion, 2D FFT processing, and result visualization on a Raspberry Pi.
